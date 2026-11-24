@@ -32,3 +32,46 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.12 });
 
 document.querySelectorAll('.reveal').forEach((element) => observer.observe(element));
+
+const progress = document.querySelector('.reading-progress span');
+const chapterStatus = document.querySelector('.chapter-status b');
+const chapters = document.querySelectorAll('[data-chapter]');
+
+const updateProgress = () => {
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  const percentage = maxScroll > 0 ? (window.scrollY / maxScroll) * 100 : 0;
+  progress.style.width = `${percentage}%`;
+};
+
+const chapterObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      chapterStatus.textContent = entry.target.dataset.chapter;
+    }
+  });
+}, { threshold: 0.48 });
+
+chapters.forEach((chapter) => chapterObserver.observe(chapter));
+window.addEventListener('scroll', updateProgress, { passive: true });
+updateProgress();
+
+const parallaxImage = document.querySelector('[data-parallax]');
+const floatingCard = document.querySelector('[data-float]');
+const hero = document.querySelector('.hero');
+
+hero.addEventListener('pointermove', (event) => {
+  const bounds = hero.getBoundingClientRect();
+  const horizontal = (event.clientX - bounds.left) / bounds.width - 0.5;
+  const vertical = (event.clientY - bounds.top) / bounds.height - 0.5;
+  parallaxImage.style.setProperty('--shift-x', `${horizontal * 14}px`);
+  parallaxImage.style.setProperty('--shift-y', `${vertical * 10}px`);
+  floatingCard.style.setProperty('--float-x', `${horizontal * -17}px`);
+  floatingCard.style.setProperty('--float-y', `${vertical * -13}px`);
+});
+
+hero.addEventListener('pointerleave', () => {
+  parallaxImage.style.setProperty('--shift-x', '0px');
+  parallaxImage.style.setProperty('--shift-y', '0px');
+  floatingCard.style.setProperty('--float-x', '0px');
+  floatingCard.style.setProperty('--float-y', '0px');
+});
