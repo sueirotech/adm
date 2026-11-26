@@ -4,7 +4,6 @@ const next = document.querySelector('#next');
 const count = document.querySelector('#current');
 const progress = document.querySelector('.progress span');
 const dots = document.querySelector('.dots');
-const curtain = document.querySelector('.transition-curtain');
 const announcement = document.querySelector('#announce');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let index = 0;
@@ -19,6 +18,7 @@ slides.forEach((slide, slideIndex) => {
 
 function updateControls() {
   count.textContent = String(index + 1).padStart(2, '0');
+  document.querySelector('#total').textContent = String(slides.length).padStart(2, '0');
   progress.style.width = `${((index + 1) / slides.length) * 100}%`;
   previous.disabled = index === 0;
   next.disabled = index === slides.length - 1;
@@ -31,23 +31,23 @@ function updateControls() {
 function goTo(target) {
   if (transitioning || target < 0 || target >= slides.length || target === index) return;
   transitioning = true;
-  curtain.classList.add('play');
-  const swapDelay = reducedMotion.matches ? 0 : 420;
+  const outgoing = slides[index];
+  const incoming = slides[target];
+  incoming.hidden = false;
+  incoming.scrollTop = 0;
+  outgoing.classList.add('leaving');
+  incoming.classList.add('entering');
+  index = target;
+  updateControls();
+  announcement.textContent = `Slide ${index + 1} de ${slides.length}: ${incoming.querySelector('h1, h2').textContent}`;
+  history.replaceState(null, '', `#${incoming.id}`);
   window.setTimeout(() => {
-    slides[index].hidden = true;
-    slides[index].classList.remove('active');
-    index = target;
-    slides[index].hidden = false;
-    slides[index].scrollTop = 0;
-    slides[index].classList.add('active');
-    updateControls();
-    announcement.textContent = `Slide ${index + 1} de ${slides.length}: ${slides[index].querySelector('h1, h2').textContent}`;
-    history.replaceState(null, '', `#slide-${index + 1}`);
-  }, swapDelay);
-  window.setTimeout(() => {
-    curtain.classList.remove('play');
+    outgoing.hidden = true;
+    outgoing.classList.remove('active', 'leaving');
+    incoming.classList.remove('entering');
+    incoming.classList.add('active');
     transitioning = false;
-  }, reducedMotion.matches ? 20 : 1000);
+  }, reducedMotion.matches ? 0 : 620);
 }
 
 previous.addEventListener('click', () => goTo(index - 1));
@@ -60,11 +60,11 @@ document.addEventListener('keydown', event => {
   if (event.key === 'ArrowLeft') { event.preventDefault(); goTo(index - 1); }
 });
 
-const initial = Number(location.hash.match(/^#slide-(\d+)$/)?.[1]);
-if (initial > 1 && initial <= slides.length) {
+const initial = slides.findIndex(slide => `#${slide.id}` === location.hash);
+if (initial > 0) {
   slides[0].hidden = true;
   slides[0].classList.remove('active');
-  index = initial - 1;
+  index = initial;
   slides[index].hidden = false;
   slides[index].classList.add('active');
 }
