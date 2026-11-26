@@ -2,28 +2,16 @@ const slides = [...document.querySelectorAll('.slide')];
 const previous = document.querySelector('#previous');
 const next = document.querySelector('#next');
 const progress = document.querySelector('.progress span');
-const dots = document.querySelector('.dots');
 const curtain = document.querySelector('.transition-curtain');
 const announcement = document.querySelector('#announce');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let index = 0;
 let transitioning = false;
 
-slides.forEach((slide, slideIndex) => {
-  const button = document.createElement('button');
-  button.setAttribute('aria-label', `Ir para o slide ${slideIndex + 1}`);
-  button.addEventListener('click', () => goTo(slideIndex));
-  dots.appendChild(button);
-});
-
 function updateControls() {
   progress.style.width = `${((index + 1) / slides.length) * 100}%`;
   previous.disabled = index === 0;
   next.disabled = index === slides.length - 1;
-  [...dots.children].forEach((button, buttonIndex) => {
-    if (buttonIndex === index) button.setAttribute('aria-current', 'true');
-    else button.removeAttribute('aria-current');
-  });
 }
 
 function goTo(target) {
